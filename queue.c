@@ -7,21 +7,75 @@
 /* Create an empty queue */
 struct list_head *q_new()
 {
-    return NULL;
+    struct list_head *head = malloc(sizeof(struct list_head));
+    if (head) {
+        head->next = head;
+        head->prev = head;
+    }
+
+    return head;
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *head) {}
+void q_free(struct list_head *head)
+{
+    if (!head) {
+        return;
+    }
+
+    struct list_head *cur, *tmp;
+    cur = head->next;
+    while (cur != head) {
+        tmp = cur->next;
+        element_t *e = list_entry(cur, element_t, list);
+        q_release_element(e);
+        cur = tmp;
+    }
+
+    free(head);
+}
 
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    if (!head || !s) {
+        return false;
+    }
+
+    element_t *new = malloc(sizeof(element_t));
+    if (!new) {
+        return false;
+    }
+
+    new->value = strdup(s);
+    if (!new->value) {
+        free(new);
+        return false;
+    }
+
+    list_add(&new->list, head);
     return true;
 }
 
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    if (!head || !s) {
+        return false;
+    }
+
+    element_t *new = malloc(sizeof(element_t));
+    if (!new) {
+        return false;
+    }
+
+    new->value = strdup(s);
+    if (!new->value) {
+        free(new);
+        return false;
+    }
+
+    list_add_tail(&new->list, head);
     return true;
 }
 
@@ -40,7 +94,20 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 /* Return number of elements in queue */
 int q_size(struct list_head *head)
 {
-    return -1;
+    int count = 0;
+    struct list_head *cur;
+
+    if (!head) {
+        return 0;
+    }
+
+    cur = head->next;
+    while (cur != head) {
+        count++;
+        cur = cur->next;
+    }
+
+    return count;
 }
 
 /* Delete the middle node in queue */
@@ -64,7 +131,20 @@ void q_swap(struct list_head *head)
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    if (!head || list_empty(head)) {
+        return;
+    }
+
+    struct list_head *cur = head->next;
+    struct list_head *tmp;
+    while (cur != head) {
+        tmp = cur->next;
+        list_move(cur, head);
+        cur = tmp;
+    }
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
