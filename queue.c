@@ -131,17 +131,78 @@ int q_size(struct list_head *head)
     return count;
 }
 
+static element_t *remove_element_from_index(struct list_head *head, int index)
+{
+    int i;
+    struct list_head *cur = head->next;
+
+    for (i = 0; i < index; i++) {
+        cur = cur->next;
+    }
+
+    list_del(cur);
+    return list_entry(cur, element_t, list);
+}
+
 /* Delete the middle node in queue */
 bool q_delete_mid(struct list_head *head)
 {
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
+    if (head == NULL) {
+        return false;
+    }
+
+    int list_size = q_size(head);
+    if (list_size <= 0) {
+        return false;
+    }
+
+    element_t *e = remove_element_from_index(head, list_size / 2);
+    q_release_element(e);
     return true;
 }
+
+#define GET_ELEMENT_VALUE(node) (list_entry(node, element_t, list)->value)
+#define DELETE_NODE(node)                                    \
+    do {                                                     \
+        struct list_head *tmp = node;                        \
+        list_del(tmp);                                       \
+        q_release_element(list_entry(tmp, element_t, list)); \
+    } while (0)
 
 /* Delete all nodes that have duplicate string */
 bool q_delete_dup(struct list_head *head)
 {
+    struct list_head *node, *safe;
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+
+    if (head == NULL || list_empty(head)) {
+        return false;
+    }
+
+    bool is_dup = false;
+    list_for_each_safe(node, safe, head) {
+        printf("node: %s\n", GET_ELEMENT_VALUE(node));
+        if (node->prev == head) {
+            continue;
+        }
+
+        if (strcmp(GET_ELEMENT_VALUE(node->prev), GET_ELEMENT_VALUE(node)) ==
+            0) {
+            is_dup = true;
+            DELETE_NODE(node->prev);
+            if (node->next == head) {
+                list_del(node);
+                q_release_element(list_entry(node, element_t, list));
+            }
+        } else {
+            if (is_dup == true) {
+                is_dup = false;
+                DELETE_NODE(node->prev);
+            }
+        }
+    }
+
     return true;
 }
 
