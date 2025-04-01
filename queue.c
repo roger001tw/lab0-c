@@ -85,7 +85,8 @@ static element_t *remove_element(struct list_head *node,
 {
     element_t *e = list_entry(node, element_t, list);
     if (sp != NULL && e != NULL && e->value != NULL && bufsize > 1) {
-        snprintf(sp, bufsize, "%s", e->value);
+        strncpy(sp, e->value, bufsize - 1);
+        sp[bufsize - 1] = '\0';
     }
 
     list_del(node);
